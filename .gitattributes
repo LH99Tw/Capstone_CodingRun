@@ -1,0 +1,3 @@
+*.ShaderLab linguist-detectable=false
+*.Mathematica linguist-detectable=false
+*.HLSL linguist-detectable=false
