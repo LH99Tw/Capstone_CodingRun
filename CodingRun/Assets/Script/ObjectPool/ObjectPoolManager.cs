@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class ObjectPoolManager : MonoBehaviour
+public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>
 {
     [Header("Instant Amounts")]
     [Range(0, 100)] public int coinAmount = 30;
@@ -13,28 +14,18 @@ public class ObjectPoolManager : MonoBehaviour
 
     private Dictionary<ObjectType, IObjectPool> pools = new();
 
-    public static ObjectPoolManager Instance;
-
-    private void Awake()
-    {
-        if(Instance == null){
-            Instance = this;
-        }
-        else if(Instance != this){
-            Destroy(gameObject);
-        }
-    }
+    private ObjectPool<MonoBehaviour> pool;
 
     void Start()
     {
-        InitPoolsFromList();
-
         //테스트 예제 (obj를 받을때 MonoBehaviour로 받음음)
-        MonoBehaviour obj = GetObject(ObjectType.COIN);
-        ReturnObject(ObjectType.COIN, obj);
+        //MonoBehaviour obj = GetObject(ObjectType.COIN);
+
     }
 
-    private void InitPoolsFromList() {
+
+    public void InitPoolsFromList()
+    {
         foreach (PoolData data in poolDataList)
         {
             if (!data.prefab.TryGetComponent(out MonoBehaviour component))
@@ -47,7 +38,7 @@ public class ObjectPoolManager : MonoBehaviour
             MonoBehaviour comp = data.prefab.GetComponent<MonoBehaviour>();
 
             // ObjectPool<MonoBehaviour>로 처리
-            var pool = new ObjectPool<MonoBehaviour>(comp);
+            pool = new ObjectPool<MonoBehaviour>(comp);
             pool.InitObjectPool(data.amount, comp);
 
             if (!pools.ContainsKey(type))
@@ -55,6 +46,14 @@ public class ObjectPoolManager : MonoBehaviour
                 pools.Add(type, pool);
             }
         }
+    }
+
+    public void ClearPool()
+    {
+        if (pool == null) return;
+        Debug.Log("ClearPool 실행됨 !!!!!!!!!!!!!!!!!!!! Count : "+pool.objectPool.Count);
+        while (pool.objectPool.Count > 0) pool.objectPool.Dequeue();
+        Debug.Log("ClearPool 다 실행됨!!!!!!!!!!!!!!!!!! Count : "+pool.objectPool.Count);
     }
 
     public MonoBehaviour GetObject(ObjectType type)
@@ -76,4 +75,5 @@ public class ObjectPoolManager : MonoBehaviour
         if (value == null) return;
         value.ReturnObject(obj);
     }
+    
 }

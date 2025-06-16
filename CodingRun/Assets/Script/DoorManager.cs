@@ -9,11 +9,10 @@ public class DoorManager : MonoBehaviour
     public GameObject doorPrefab;
     [Tooltip("문 이동 속도")]
     public float moveSpeed = 5f;
-    
+    private StageManager manager;
     private List<GameObject> activeDoors = new List<GameObject>();
     private Timer timer;
     private bool doorsSpawned = false;
-    private Vector3[] spawnPoints = new Vector3[3];
     private Transform items;
 
     void Start()
@@ -29,10 +28,7 @@ public class DoorManager : MonoBehaviour
         {
             Debug.LogError("Items 오브젝트를 찾을 수 없습니다!");
         }
-
-        spawnPoints[0] = new Vector3(-4.9f, 1f, 44f);
-        spawnPoints[1] = new Vector3(0f, 1f, 44f);
-        spawnPoints[2] = new Vector3(4.9f, 1f, 44f);
+        manager = FindAnyObjectByType<StageManager>();
     }
 
     void Update()
@@ -42,15 +38,21 @@ public class DoorManager : MonoBehaviour
 
         if (timer != null && timer.isAnsweringQuestion)
         {
-            if (timer.timerValue <= 9f && !doorsSpawned)
+            if (timer.timerValue <= 1f && !doorsSpawned && manager.getNowState() == StageState.QUESTION_STATE)
             {
                 SpawnDoors();
                 doorsSpawned = true;
             }
-            else if (timer.timerValue > 9f)
+            else if (timer.timerValue > 1f)
             {
                 doorsSpawned = false;
             }
+        }
+
+        MapLoader mapLoader = FindObjectOfType<MapLoader>();
+        if (mapLoader != null)
+        {
+            moveSpeed = mapLoader.moveSpeed;
         }
     }
 
@@ -67,19 +69,13 @@ public class DoorManager : MonoBehaviour
 
         for (int i = 0; i < 3; i++)
         {
-            GameObject door = Instantiate(doorPrefab, spawnPoints[i], Quaternion.identity, items);
+            GameObject door = Instantiate(doorPrefab, manager.spawnPoints[i], Quaternion.identity, items);
             door.name = "Door" + (i + 1);
             
             DoorBehavior doorBehavior = door.GetComponent<DoorBehavior>();
             if (doorBehavior != null)
             {
                 doorBehavior.answerNumber = i + 1;
-            }
-            
-            Rigidbody rb = door.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.velocity = Vector3.back * moveSpeed;
             }
             
             activeDoors.Add(door);

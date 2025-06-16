@@ -12,16 +12,6 @@ public enum ItemType
 public class UnifiedItem : MonoBehaviour
 {
     public ItemType itemType; // 인스펙터에서 유형 지정
-
-    // 코인용 파라미터
-    [Header("코인 설정")]
-    public float rotationSpeed = 30f;
-    public float coinScore = 100f;
-
-    // 하트용 파라미터
-    [Header("하트 설정")]
-    public int healAmount = 40;
-
     private Rigidbody rb;
     protected virtual void Awake()
     {
@@ -53,10 +43,25 @@ public class UnifiedItem : MonoBehaviour
 
     private void RotateObject()
     {
+        if (ConfigManager.Instance == null)
+        {
+            Debug.LogError("ConfigManager.Instance is NULL");
+            return;
+        }
+        if (ConfigManager.Instance.itemConfig == null)
+        {
+            Debug.LogError("itemConfig is NULL");
+            return;
+        }
+        if (ConfigManager.Instance.itemConfig.Coin == null)
+        {
+            Debug.LogError("itemConfig.Coin is NULL");
+            return;
+        }
         float rotationSpeed = ConfigManager.Instance.itemConfig.Coin.rotationSpeed;
         transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime, Space.World);
     }
-    private void OnTriggerEnter(Collider other)
+    /*private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
@@ -86,7 +91,7 @@ public class UnifiedItem : MonoBehaviour
             }
             ReturnToPool();
         }
-    }
+    }*/
 
     public void ReturnToPool()
     {
@@ -100,13 +105,13 @@ public class UnifiedItem : MonoBehaviour
                 break;
 
             case ItemType.Heart:
-                Destroy(gameObject); 
+                Destroy(gameObject);
                 break;
         }
     }
 
     // ObjectType과 ItemType이 다르다면 이 메서드에서 매핑해 줄 수 있음
-    private ObjectType GetPoolType()
+    public ObjectType GetPoolType()
     {
         // 예시: ItemType.Coin -> ObjectType.COIN, ItemType.Heart -> ObjectType.HEART
         switch (itemType)
